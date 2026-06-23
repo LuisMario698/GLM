@@ -1,0 +1,4 @@
+'use client';
+import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+const data = [{ date: 'Lun', peso: 97 }, { date: 'Mar', peso: 96.8 }, { date: 'Mié', peso: 96.6 }, { date: 'Jue', peso: 96.4 }, { date: 'Vie', peso: 96.2 }, { date: 'Sáb', peso: 96 }, { date: 'Dom', peso: 95.9 }];
+export function ProgressChart() { return <div className="h-72 w-full"><ResponsiveContainer><AreaChart data={data}><defs><linearGradient id="peso" x1="0" x2="0" y1="0" y2="1"><stop offset="5%" stopColor="#22C55E" stopOpacity={0.35}/><stop offset="95%" stopColor="#22C55E" stopOpacity={0}/></linearGradient></defs><CartesianGrid stroke="#E5E7EB" vertical={false}/><XAxis dataKey="date" tickLine={false} axisLine={false}/><YAxis domain={[95, 98]} tickLine={false} axisLine={false}/><Tooltip/><Area type="monotone" dataKey="peso" stroke="#22C55E" fill="url(#peso)" strokeWidth={3}/></AreaChart></ResponsiveContainer></div>; }

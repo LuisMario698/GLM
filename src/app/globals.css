@@ -1,0 +1,20 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-background: #ffffff;
+  --color-foreground: #111827;
+  --color-primary: #22c55e;
+  --color-primary-foreground: #052e16;
+  --color-secondary: #16a34a;
+  --color-border: #e5e7eb;
+  --color-muted: #f9fafb;
+  --color-muted-foreground: #6b7280;
+  --color-card: #ffffff;
+  --color-card-foreground: #111827;
+  --radius-xl: 1rem;
+  --font-sans: var(--font-geist-sans);
+}
+
+* { border-color: var(--color-border); }
+body { margin: 0; background: var(--color-background); color: var(--color-foreground); font-family: var(--font-geist-sans), system-ui, sans-serif; }
+::selection { background: color-mix(in oklab, var(--color-primary) 25%, transparent); }
