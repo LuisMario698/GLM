@@ -102,3 +102,14 @@ export const nutritionSettingsSchema = z.object({
   eating_disorder: bool,
   renal_or_metabolic_condition: bool,
 });
+
+export const registerPhotoMealSchema = z.object({
+  imagePath: z.string().min(1).max(500),
+  imageType: z.enum(['image/jpeg', 'image/png', 'image/webp']),
+  imageSize: z.number().int().min(1).max(5 * 1024 * 1024),
+});
+
+export const refinePhotoMealSchema = z.object({
+  mealId: z.uuid(),
+  answers: z.string().trim().min(2).max(2000),
+});

@@ -6,6 +6,36 @@ export type PlanAdjustment = 'baseline' | 'progress' | 'maintain' | 'recovery' |
 export type RecommendationStatus = 'normal' | 'reduced' | 'paused';
 export type DietPattern = 'omnivore' | 'vegetarian' | 'vegan';
 export type MealSlot = 'breakfast' | 'lunch' | 'dinner' | 'snack';
+export type PhotoMealStatus = 'pending' | 'consumed';
+export type PhotoMealAnalysisStatus = 'not_analyzed' | 'analyzing' | 'needs_review' | 'reviewed' | 'failed';
+
+export type PhotoMealDetectedItem = {
+  name: string;
+  quantity_estimate: string | null;
+  confidence: number;
+};
+
+export type PhotoMeal = {
+  id: string;
+  profile_id: string;
+  image_path: string;
+  title: string;
+  status: PhotoMealStatus;
+  calories_estimated: number | null;
+  protein_estimated: number | null;
+  carbs_estimated: number | null;
+  fat_estimated: number | null;
+  analysis_status: PhotoMealAnalysisStatus;
+  detected_items: PhotoMealDetectedItem[];
+  analysis_questions: string[];
+  quantity_notes: string | null;
+  analysis_error: string | null;
+  analysis_model: string | null;
+  analysis_completed_at: string | null;
+  consumed_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
 
 export type SessionSetLog = {
   id: string;

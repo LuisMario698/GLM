@@ -1,14 +1,21 @@
+/* eslint-disable @next/next/no-img-element */
 import Link from "next/link";
-import { BookOpen, Clock3 } from "lucide-react";
+import { BookOpen, Brain, CheckCircle2, CircleDashed, Clock3, ImageOff } from "lucide-react";
 import { requireProfile } from "@/lib/auth";
 import { addDays, localISODate, mondayOf } from "@/lib/date";
-import type { NutritionProfile } from "@/types/domain";
+import { PHOTO_MEAL_BUCKET } from "@/lib/photo-meals";
+import type { NutritionProfile, PhotoMeal } from "@/types/domain";
 import { Card } from "@/components/ui/card";
 import { PageHeader } from "@/components/layout/page-header";
 import {
   MealActions,
   TargetActions,
 } from "@/components/nutrition/nutrition-actions";
+import { PhotoMealUploader } from "@/components/nutrition/photo-meal-uploader";
+import {
+  PhotoMealActions,
+  PhotoMealRefineForm,
+} from "@/components/nutrition/photo-meal-actions";
 import { UrlTabs } from "@/components/ui/url-tabs";
 import { EmptyState, StatusBanner } from "@/components/ui/feedback";
 import { Modal } from "@/components/ui/modal";
@@ -37,6 +44,7 @@ type IngredientItem = {
   quantity: number;
   foods: { name: string; unit: string };
 };
+type PhotoMealWithUrl = PhotoMeal & { imageUrl: string | null };
 
 export default async function NutritionPage({
   searchParams,
@@ -44,7 +52,7 @@ export default async function NutritionPage({
   searchParams: Promise<{ tab?: string; day?: string }>;
 }) {
   const params = await searchParams;
-  const tab = ["hoy", "semana", "compras", "referencias"].includes(
+  const tab = ["hoy", "semana", "comidas", "compras", "referencias"].includes(
     params.tab ?? "",
   )
     ? params.tab!
@@ -55,7 +63,7 @@ export default async function NutritionPage({
     ? params.day!
     : today;
   const { supabase, userId } = await requireProfile();
-  const [{ data: nutrition }, { data: plan }] = await Promise.all([
+  const [{ data: nutrition }, { data: plan }, { count: pendingPhotoMeals }] = await Promise.all([
     supabase
       .from("nutrition_profiles")
       .select("*")
@@ -67,6 +75,11 @@ export default async function NutritionPage({
       .eq("profile_id", userId)
       .eq("week_start", weekStart)
       .maybeSingle(),
+    supabase
+      .from("meals")
+      .select("id", { count: "exact", head: true })
+      .eq("profile_id", userId)
+      .eq("status", "pending"),
   ]);
   const n = nutrition as NutritionProfile;
   const { data: rawItems } = plan
@@ -86,6 +99,23 @@ export default async function NutritionPage({
         .in("recipe_id", recipeIds)
     : { data: [] };
   const ingredients = (rawIngredients ?? []) as IngredientItem[];
+  const { data: rawPhotoMeals } =
+    tab === "comidas"
+      ? await supabase
+          .from("meals")
+          .select("*")
+          .eq("profile_id", userId)
+          .order("created_at", { ascending: false })
+          .limit(50)
+      : { data: [] };
+  const photoMeals = await Promise.all(
+    ((rawPhotoMeals ?? []) as PhotoMeal[]).map(async (meal) => {
+      const { data: signed } = await supabase.storage
+        .from(PHOTO_MEAL_BUCKET)
+        .createSignedUrl(meal.image_path, 60 * 30);
+      return { ...meal, imageUrl: signed?.signedUrl ?? null };
+    }),
+  );
   const blocked =
     n.pregnancy_or_lactation ||
     n.eating_disorder ||
@@ -101,6 +131,12 @@ export default async function NutritionPage({
       value: "semana",
       label: "Semana",
       href: `/alimentacion?tab=semana&day=${selectedDay}`,
+    },
+    {
+      value: "comidas",
+      label: "Comidas",
+      href: "/alimentacion?tab=comidas",
+      count: pendingPhotoMeals ?? 0,
     },
     { value: "compras", label: "Compras", href: "/alimentacion?tab=compras" },
     {
@@ -123,7 +159,9 @@ export default async function NutritionPage({
           marcada en tus ajustes.
         </StatusBanner>
       )}
-      {tab === "referencias" ? (
+      {tab === "comidas" ? (
+        <PhotoMealsTab meals={photoMeals} />
+      ) : tab === "referencias" ? (
         <>
           <Card>
             <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
@@ -255,6 +293,107 @@ export default async function NutritionPage({
     </section>
   );
 }
+
+function PhotoMealsTab({ meals }: { meals: PhotoMealWithUrl[] }) {
+  return (
+    <div className="space-y-5">
+      <PhotoMealUploader />
+      {meals.length ? (
+        <div className="grid gap-4 lg:grid-cols-2">
+          {meals.map((meal) => (
+            <PhotoMealCard key={meal.id} meal={meal} />
+          ))}
+        </div>
+      ) : (
+        <EmptyState
+          title="Sin comidas registradas"
+          description="Toma o sube una foto de tu platillo para guardarlo como comida pendiente."
+        />
+      )}
+    </div>
+  );
+}
+
+function PhotoMealCard({ meal }: { meal: PhotoMealWithUrl }) {
+  const questions = Array.isArray(meal.analysis_questions) ? meal.analysis_questions : [];
+  const detected = Array.isArray(meal.detected_items) ? meal.detected_items : [];
+  return (
+    <Card className="overflow-hidden p-0">
+      {meal.imageUrl ? (
+        <img
+          src={meal.imageUrl}
+          alt={`Foto de ${meal.title}`}
+          className="aspect-[4/3] w-full object-cover"
+        />
+      ) : (
+        <div className="grid aspect-[4/3] place-items-center bg-muted text-muted-foreground">
+          <ImageOff size={34} />
+        </div>
+      )}
+      <div className="p-5 sm:p-6">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-wide text-primary">
+              {new Intl.DateTimeFormat("es-MX", {
+                day: "2-digit",
+                month: "short",
+                hour: "2-digit",
+                minute: "2-digit",
+              }).format(new Date(meal.created_at))}
+            </p>
+            <h2 className="font-display mt-2 text-2xl">{meal.title}</h2>
+          </div>
+          <StatusPill status={meal.status} />
+        </div>
+
+        <div className="mt-4 grid grid-cols-2 gap-2 text-sm sm:grid-cols-4">
+          <NutritionPill label="Calorías" value={formatEstimate(meal.calories_estimated, "")} />
+          <NutritionPill label="Proteína" value={formatEstimate(meal.protein_estimated, "g")} />
+          <NutritionPill label="Carbos" value={formatEstimate(meal.carbs_estimated, "g")} />
+          <NutritionPill label="Grasa" value={formatEstimate(meal.fat_estimated, "g")} />
+        </div>
+
+        <div className="mt-4 rounded-2xl bg-muted p-3">
+          <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-secondary">
+            <Brain size={15} />
+            {analysisStatusLabel(meal.analysis_status)}
+          </p>
+          {meal.analysis_error ? (
+            <p className="mt-2 text-xs leading-5 text-red-700">{meal.analysis_error}</p>
+          ) : detected.length ? (
+            <ul className="mt-2 grid gap-1 text-xs leading-5 text-muted-foreground">
+              {detected.map((item) => (
+                <li key={`${meal.id}-${item.name}`}>
+                  {item.name}
+                  {item.quantity_estimate ? ` · ${item.quantity_estimate}` : ""}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="mt-2 text-xs leading-5 text-muted-foreground">
+              Todavía no hay alimentos detectados.
+            </p>
+          )}
+        </div>
+
+        {meal.status === "pending" ? (
+          <PhotoMealRefineForm mealId={meal.id} questions={questions} />
+        ) : meal.consumed_at ? (
+          <p className="mt-4 rounded-2xl bg-emerald-50 p-3 text-xs leading-5 text-emerald-800">
+            Consumida el{" "}
+            {new Intl.DateTimeFormat("es-MX", {
+              dateStyle: "medium",
+              timeStyle: "short",
+            }).format(new Date(meal.consumed_at))}
+          </p>
+        ) : null}
+
+        <PhotoMealActions mealId={meal.id} status={meal.status} />
+      </div>
+    </Card>
+  );
+}
+
 function MealGrid({ items }: { items: MealItem[] }) {
   return items.length ? (
     <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -317,6 +456,49 @@ function MealGrid({ items }: { items: MealItem[] }) {
       description="El menú actual no contiene elementos para la fecha seleccionada."
     />
   );
+}
+
+function StatusPill({ status }: { status: PhotoMeal["status"] }) {
+  const consumed = status === "consumed";
+  return (
+    <span
+      className={
+        consumed
+          ? "inline-flex shrink-0 items-center gap-1 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-800"
+          : "inline-flex shrink-0 items-center gap-1 rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-800"
+      }
+    >
+      {consumed ? <CheckCircle2 size={14} /> : <CircleDashed size={14} />}
+      {consumed ? "Consumida" : "Pendiente"}
+    </span>
+  );
+}
+
+function NutritionPill({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-xl border bg-white px-3 py-2">
+      <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
+        {label}
+      </p>
+      <p className="font-semibold">{value}</p>
+    </div>
+  );
+}
+
+function formatEstimate(value: number | null, unit: string) {
+  return value === null ? "Pendiente" : `${Math.round(Number(value))}${unit}`;
+}
+
+function analysisStatusLabel(status: PhotoMeal["analysis_status"]) {
+  return (
+    {
+      not_analyzed: "Sin analizar",
+      analyzing: "Analizando imagen",
+      needs_review: "Estimación por revisar",
+      reviewed: "Estimación revisada",
+      failed: "Análisis no disponible",
+    } satisfies Record<PhotoMeal["analysis_status"], string>
+  )[status];
 }
 function NoMenu() {
   return (
