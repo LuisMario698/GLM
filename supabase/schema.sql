@@ -1,2 +1,5 @@
 -- Canonical GLM V2 schema.
--- Run supabase/migrations/202606240001_glm_v2.sql in a Supabase SQL editor.
+-- Run migrations in order:
+-- 1. supabase/migrations/202606240001_glm_v2.sql
+-- 2. supabase/migrations/202606240002_session_sets.sql
+-- 3. supabase/migrations/202606260001_photo_meals.sql
