@@ -1,13 +1,11 @@
 {
   "compilerOptions": {
-    "target": "ES2022",
+    "target": "ES2024",
     "lib": [
       "dom",
       "dom.iterable",
-      "es2022"
+      "es2024"
     ],
-    "allowJs": false,
-    "skipLibCheck": true,
     "strict": true,
     "noEmit": true,
     "esModuleInterop": true,
@@ -22,20 +20,29 @@
         "name": "next"
       }
     ],
+    "types": [
+      "@serwist/next/typings",
+      "vitest/globals"
+    ],
     "paths": {
       "@/*": [
         "./src/*"
       ]
-    }
+    },
+    "allowJs": true,
+    "skipLibCheck": true
   },
   "include": [
     "next-env.d.ts",
-    "**/*.ts",
-    "**/*.tsx",
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "tests/**/*.ts",
+    "tests/**/*.tsx",
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "public/sw.js"
   ]
 }

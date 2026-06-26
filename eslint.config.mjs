@@ -1,12 +1,11 @@
 import nextVitals from 'eslint-config-next/core-web-vitals';
 import nextTs from 'eslint-config-next/typescript';
 
-const eslintConfig = [
+const config = [
   ...nextVitals,
   ...nextTs,
-  {
-    ignores: ['.next/**', 'out/**', 'public/sw.js', 'public/workbox-*.js', 'next-env.d.ts'],
-  },
+  { ignores: ['.next/**', 'public/sw.js', 'public/swe-worker-*.js', 'public/workbox-*.js', 'next-env.d.ts'] },
+  { rules: { '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }] } },
 ];
 
-export default eslintConfig;
+export default config;

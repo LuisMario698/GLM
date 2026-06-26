@@ -1,6 +1,0 @@
-export type Profile = { id: string; name: string; height: number; birth_date: string; goal: string; created_at: string };
-export type BodyMetric = { id: string; profile_id: string; date: string; weight: number; waist: number; neck: number; chest: number; arm: number };
-export type Workout = { id: string; profile_id: string; date: string; duration: number };
-export type WorkoutExercise = { id: string; workout_id: string; exercise_name: string; sets: number; reps: number; rpe: number };
-export type Habit = { id: string; profile_id: string; date: string; water: number; sleep: number; steps: number; protein: number };
-export type Database = { public: { Tables: { profiles: { Row: Profile; Insert: Omit<Profile, 'created_at'> & { created_at?: string }; Update: Partial<Profile> }; body_metrics: { Row: BodyMetric; Insert: Omit<BodyMetric, 'id'> & { id?: string }; Update: Partial<BodyMetric> }; workouts: { Row: Workout; Insert: Omit<Workout, 'id'> & { id?: string }; Update: Partial<Workout> }; workout_exercises: { Row: WorkoutExercise; Insert: Omit<WorkoutExercise, 'id'> & { id?: string }; Update: Partial<WorkoutExercise> }; habits: { Row: Habit; Insert: Omit<Habit, 'id'> & { id?: string }; Update: Partial<Habit> } } } };

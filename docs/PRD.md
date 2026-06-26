@@ -1,62 +1,21 @@
-# GLM
+# GLM V2 - PRD
 
-GLM es una Progressive Web App enfocada en salud,
-hábitos y entrenamiento físico.
+## Propósito
 
-No es únicamente una aplicación para registrar ejercicios.
+GLM ayuda a adultos sanos a registrar actividad física real y recibir orientación general basada en su objetivo, disponibilidad, equipo y preparación. El producto separa recomendaciones deterministas de explicaciones generadas por IA.
 
-Su objetivo es ayudar al usuario a tomar mejores decisiones
-relacionadas con entrenamiento, nutrición,
-descanso y actividad física.
+## Flujos
 
-## Objetivos
+- Onboarding 18+ con perfil físico, actividad, equipo, seguridad, alimentación, alergias y consentimiento.
+- Check-in diario que conserva, reduce 25 % o pausa la sesión.
+- Revisión semanal que usa cumplimiento, RPE y recuperación para la siguiente semana.
+- Sesión con tiempo total, ejercicio, descanso y persistencia en servidor.
+- Catálogo con técnica, errores, ilustración propia y fuente externa.
+- Menú de siete días con recetas curadas, sustituciones, compras y cumplimiento simple.
+- Guía IA que explica contexto aprobado y conserva historial borrable durante 30 días.
 
-- Mejorar salud
-- Mejorar condición física
-- Generar hábitos sostenibles
-- Registrar progreso
+## No objetivos
 
-## MVP
-
-### Dashboard
-
-Mostrar:
-
-- peso actual
-- meta
-- pasos
-- agua
-- sueño
-- entrenamientos
-
-### Entrenamientos
-
-Registrar:
-
-- ejercicios
-- series
-- repeticiones
-- dificultad
-
-### Hábitos
-
-Registrar:
-
-- agua
-- sueño
-- pasos
-- proteína
-
-### Métricas
-
-Registrar:
-
-- peso
-- cintura
-- cuello
-- pecho
-- brazo
-
-### Estadísticas
-
-Mostrar gráficas de progreso.
+- Diagnóstico, rehabilitación, dieta clínica, suplementos o recomendaciones pediátricas.
+- Predicción de peso, composición corporal, rendimiento o fecha de resultados.
+- Modificación automática de mediciones registradas por el usuario.

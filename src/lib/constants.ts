@@ -1,6 +1,20 @@
-export const APP_NAME = 'GLM';
-export const PRIMARY_PROFILE_ID = 'mario';
-export const userBaseline = { name: 'Mario', age: 21, sex: 'Masculino', heightMeters: 1.85, weightKg: 97, goal: 'Recomposición corporal, verse atlético y mejorar condición física', training: 'Casa, 4 a 5 días por semana, 60 minutos por sesión' };
-export const navigation = [
-  { href: '/dashboard', label: 'Dashboard' }, { href: '/habitos', label: 'Hábitos' }, { href: '/entrenamientos', label: 'Entrenamientos' }, { href: '/metricas', label: 'Métricas' }, { href: '/estadisticas', label: 'Estadísticas' },
+import { Apple, BookOpenText, CalendarDays, CircleGauge, Dumbbell, MessageCircle, Ruler } from 'lucide-react';
+
+export const primaryNavigation = [
+  { href: '/hoy', label: 'Hoy', icon: CircleGauge },
+  { href: '/plan', label: 'Plan', icon: CalendarDays },
+  { href: '/actividad', label: 'Actividad', icon: Dumbbell },
+  { href: '/alimentacion', label: 'Alimentación', icon: Apple },
+  { href: '/guia', label: 'Guía', icon: MessageCircle },
 ] as const;
+
+export const libraryNavigation = [
+  { href: '/ejercicios', label: 'Ejercicios', icon: BookOpenText },
+  { href: '/progreso', label: 'Progreso', icon: Ruler },
+] as const;
+
+export const navigation = [...primaryNavigation, ...libraryNavigation] as const;
+
+export const goalLabels = {
+  body_recomposition: 'Recomposición corporal', fat_loss: 'Pérdida de grasa', muscle_gain: 'Ganancia muscular', fitness: 'Condición física',
+} as const;

@@ -1,19 +1,17 @@
 import type { NextConfig } from 'next';
-import withPWAInit from 'next-pwa';
+import withSerwistInit from '@serwist/next';
 
-const withPWA = withPWAInit({
-  dest: 'public',
-  disable: process.env.NODE_ENV === 'development',
-  register: true,
-  skipWaiting: true,
-});
-
-const nextConfig: NextConfig = {
+const config: NextConfig = {
   reactStrictMode: true,
-  typedRoutes: true,
-  experimental: {
-    optimizePackageImports: ['lucide-react', 'recharts'],
-  },
+  poweredByHeader: false,
+  experimental: { optimizePackageImports: ['lucide-react'] },
 };
 
-export default withPWA(nextConfig);
+export default process.env.NODE_ENV === 'production'
+  ? withSerwistInit({
+      swSrc: 'src/app/sw.ts',
+      swDest: 'public/sw.js',
+      additionalPrecacheEntries: [{ url: '/offline', revision: process.env.VERCEL_GIT_COMMIT_SHA ?? 'glm-v2' }],
+      globPublicPatterns: ['icons/*.svg', 'manifest.webmanifest'],
+    })(config)
+  : config;
