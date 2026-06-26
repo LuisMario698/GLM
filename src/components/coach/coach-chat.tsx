@@ -12,6 +12,7 @@ import {
   UserRound,
 } from "lucide-react";
 import { askCoach, deleteConversation } from "@/lib/actions/coach";
+import { guideConversationHref } from "@/lib/coach-routing";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -86,8 +87,9 @@ export function CoachChat({
 
     start(async () => {
       try {
+        const previousId = activeId;
         const result = await askCoach({
-          conversationId: activeId,
+          conversationId: previousId,
           message: question,
           contextType: "general",
         });
@@ -103,7 +105,11 @@ export function CoachChat({
               created_at: new Date().toISOString(),
             },
           ]);
-          router.refresh();
+          if (previousId) {
+            router.refresh();
+          } else {
+            router.replace(guideConversationHref(result.data.conversationId));
+          }
         } else {
           setMessages((current) =>
             current.filter((message) => message.id !== localId),
