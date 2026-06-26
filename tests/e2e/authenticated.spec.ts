@@ -23,6 +23,7 @@ test.describe('authenticated application', () => {
       '/alimentacion?tab=hoy', '/alimentacion?tab=semana', '/alimentacion?tab=comidas', '/alimentacion?tab=compras', '/alimentacion?tab=referencias',
       '/ejercicios', '/ejercicios/chair-squat?tab=tecnica', '/ejercicios/chair-squat?tab=puntos', '/ejercicios/chair-squat?tab=errores',
       '/progreso?tab=resumen', '/progreso?tab=registrar', '/progreso?tab=historial',
+      '/estadisticas?range=7d', '/estadisticas?range=30d',
       '/ajustes?tab=entrenamiento', '/ajustes?tab=alimentacion', '/ajustes?tab=seguridad',
       '/guia',
     ];

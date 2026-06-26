@@ -1,4 +1,4 @@
-import { Apple, BookOpenText, CalendarDays, CircleGauge, Dumbbell, MessageCircle, Ruler } from 'lucide-react';
+import { Apple, BarChart3, BookOpenText, CalendarDays, CircleGauge, Dumbbell, MessageCircle, Ruler } from 'lucide-react';
 
 export const primaryNavigation = [
   { href: '/hoy', label: 'Hoy', icon: CircleGauge },
@@ -11,6 +11,7 @@ export const primaryNavigation = [
 export const libraryNavigation = [
   { href: '/ejercicios', label: 'Ejercicios', icon: BookOpenText },
   { href: '/progreso', label: 'Progreso', icon: Ruler },
+  { href: '/estadisticas', label: 'Estadísticas', icon: BarChart3 },
 ] as const;
 
 export const navigation = [...primaryNavigation, ...libraryNavigation] as const;
