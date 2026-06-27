@@ -32,7 +32,6 @@ export default async function GuidePage({ searchParams }: { searchParams: Promis
     <div className="grid gap-6 lg:grid-cols-[250px_minmax(0,1fr)]">
       <aside className="hidden space-y-2 lg:block"><ConversationLinks conversations={conversations ?? []} activeId={activeId}/></aside>
       <CoachChat
-        key={activeId ?? 'new'}
         conversationId={activeId === 'new' ? undefined : activeId}
         initialMessages={messages ?? []}
         initialPrompt={params.prompt}

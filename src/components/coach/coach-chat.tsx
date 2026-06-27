@@ -50,15 +50,31 @@ export function CoachChat({
   const [activeOperation, setActiveOperation] = useState<
     "send" | "delete" | null
   >(null);
+  const [renderedConversationId, setRenderedConversationId] =
+    useState(conversationId);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+
+  if (renderedConversationId !== conversationId) {
+    setRenderedConversationId(conversationId);
+    if (conversationId !== activeId) {
+      setMessages(initialMessages);
+      setActiveId(conversationId);
+      setPrompt(initialPrompt);
+      setError("");
+    }
+  }
 
   useEffect(() => {
     const scrollArea = scrollAreaRef.current;
     if (!scrollArea) return;
-    scrollArea.scrollTo({
-      top: scrollArea.scrollHeight,
-      behavior: "smooth",
-    });
+    if (typeof scrollArea.scrollTo === "function") {
+      scrollArea.scrollTo({
+        top: scrollArea.scrollHeight,
+        behavior: "smooth",
+      });
+    } else {
+      scrollArea.scrollTop = scrollArea.scrollHeight;
+    }
   }, [messages, activeOperation, error]);
 
   function send() {

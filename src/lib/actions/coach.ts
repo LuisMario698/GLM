@@ -5,8 +5,11 @@ import { requireProfile, requireUser } from '@/lib/auth';
 import { localISODate } from '@/lib/date';
 import { recommendToday } from '@/lib/recommendations/daily';
 import { coachSchema } from '@/lib/validations';
+import { parseCoachAnswer } from '@/lib/coach-response';
 import type { ActionResult, DailyCheckin } from '@/types/domain';
 import { asResult } from './state';
+
+const openAITimeoutMs = 30_000;
 
 export async function askCoach(input: { conversationId?: string; message: string; contextType: 'general' | 'daily' | 'session' | 'exercise' | 'meal' }): Promise<ActionResult<{ conversationId: string; answer: string }>> {
   const parsed = coachSchema.safeParse({ conversation_id: input.conversationId, message: input.message, context_type: input.contextType });
@@ -20,7 +23,7 @@ export async function askCoach(input: { conversationId?: string; message: string
       supabase.from('weekly_plans').select('adjustment,rationale').eq('profile_id', userId).order('week_start', { ascending: false }).limit(1).maybeSingle(),
     ]);
     const safeDaily = checkin ? recommendToday(checkin as DailyCheckin) : null;
-    const moderation = await fetch('https://api.openai.com/v1/moderations', { method: 'POST', headers: headers(), body: JSON.stringify({ model: 'omni-moderation-latest', input: parsed.data.message }) });
+    const moderation = await fetch('https://api.openai.com/v1/moderations', { method: 'POST', headers: headers(), signal: AbortSignal.timeout(openAITimeoutMs), body: JSON.stringify({ model: 'omni-moderation-latest', input: parsed.data.message }) });
     if (!moderation.ok) throw new Error('No fue posible validar el mensaje.');
     const moderationJson = await moderation.json();
     if (moderationJson.results?.[0]?.flagged) return { ok: false, error: 'No puedo responder ese mensaje de forma segura.' };
@@ -33,7 +36,7 @@ export async function askCoach(input: { conversationId?: string; message: string
       weekly_rationale: plan?.rationale ?? null,
     };
     const response = await fetch('https://api.openai.com/v1/responses', {
-      method: 'POST', headers: headers(),
+      method: 'POST', headers: headers(), signal: AbortSignal.timeout(openAITimeoutMs),
       body: JSON.stringify({
         model: process.env.OPENAI_MODEL ?? 'gpt-5.4-mini', store: false, reasoning: { effort: 'low' },
         instructions: 'Eres el guía explicativo de GLM para adultos sanos. Explica únicamente el contexto aprobado. No diagnostiques, no cambies ejercicios, series, calorías ni comidas, no prometas resultados. Si preguntan por dolor, enfermedad, lesión, embarazo o dieta clínica, indica que GLM no puede atenderlo y recomienda un profesional. Responde en español claro y breve.',
@@ -44,10 +47,7 @@ export async function askCoach(input: { conversationId?: string; message: string
     });
     if (!response.ok) throw new Error('El guía no está disponible en este momento.');
     const json = await response.json();
-    const raw = json.output?.flatMap((item: { content?: { type: string; text?: string }[] }) => item.content ?? []).find((item: { type: string }) => item.type === 'output_text')?.text;
-    if (!raw) throw new Error('El guía devolvió una respuesta vacía.');
-    const output = JSON.parse(raw) as { answer: string; safety_notice: string };
-    const answer = output.safety_notice ? `${output.answer}\n\n${output.safety_notice}` : output.answer;
+    const answer = parseCoachAnswer(json);
 
     let conversationId = parsed.data.conversation_id;
     if (conversationId) {
@@ -60,11 +60,13 @@ export async function askCoach(input: { conversationId?: string; message: string
       conversationId = created.id;
     }
     if (!conversationId) throw new Error('No fue posible crear la conversación.');
-    await supabase.from('coach_messages').insert([
+    const { error: messagesError } = await supabase.from('coach_messages').insert([
       { conversation_id: conversationId, role: 'user', content: parsed.data.message, context_type: parsed.data.context_type },
       { conversation_id: conversationId, role: 'assistant', content: answer, context_type: parsed.data.context_type },
     ]);
-    await supabase.from('coach_conversations').update({ expires_at: new Date(Date.now() + 30 * 86400_000).toISOString() }).eq('id', conversationId);
+    if (messagesError) throw messagesError;
+    const { error: conversationError } = await supabase.from('coach_conversations').update({ expires_at: new Date(Date.now() + 30 * 86400_000).toISOString() }).eq('id', conversationId);
+    if (conversationError) throw conversationError;
     revalidatePath('/guia');
     return { ok: true, data: { conversationId, answer } };
   } catch (error) { return asResult(error, 'No fue posible consultar al guía.'); }
